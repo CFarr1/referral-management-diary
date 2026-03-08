@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" /> <!--Style sheet-->
+    <link rel="stylesheet" href="static/calendar.css" />
+    <link rel="icon" href="/static/favicon.ico">
+
+
+    <title>Calendar</title>
+</head>
+<body>
+    <div class="container-fluid">
+        <header>
+            <h4 class="display-4 mb-4 text-center">Upcoming appointments</h4>
+        </header>
+        <div class="row no-gutters">
+
+            <!-- time labels -->
+            <div class="col-auto p-0" style="width: 70px; margin-top: 9px;">
+                <div class="time-spacer"></div>
+
+                {% for hour in range(openHours[0], openHours[1] + 1, 2) %} <!-- if even between open hours -->
+                    <div class="time">{{ hour }}:00</div>
+
+                    {% if not loop.last %}
+                        <div class="time-spacer"></div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+
+            <!-- calendar grid -->
+            <div class="col p-0">
+
+                <!-- day labels -->
+                <div class="row no-gutters">
+                    {% for day in days %}
+                        <div class="col text-center border border-left-0 border-top-0 p-2">
+                            <h5>{{ day }}</h5>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- hours -->
+                {% for hour in range(openHours[0], openHours[1] + 1) %}
+                <div class="row no-gutters hour-row">
+
+                    {% for day in days %}
+                        <div class="col border border-left-0 border-top-0 p-1">
+
+                            {% if calendar.get(day, {}).get(hour) %}
+                                {% for event in calendar[day][hour] %}
+                                    <a class="event bg-info text-white">
+                                        {{ hour }}:00 - {{ event.patient }}
+                                    </a>
+                                {% endfor %}
+                            {% endif %}
+
+                        </div>
+                    {% endfor %}
+
+                </div>
+                {% endfor %}
+
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
+
+
