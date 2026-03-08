@@ -36,63 +36,54 @@
     </div>
 
 
-
-    <div class="container-fluid">
-        <header>
-            <h4 class="display-4 mb-4 text-center">Upcoming appointments</h4>
-        </header>
-        <div class="row no-gutters">
-
-            <!-- time labels -->
-            <div class="col-auto p-0" style="width: 70px; margin-top: 9px;">
-                <div class="time-spacer"></div>
-
-                {% for hour in range(openHours[0], openHours[1] + 1, 2) %} <!-- if even between open hours -->
-                    <div class="time">{{ hour }}:00</div>
-
-                    {% if not loop.last %}
-                        <div class="time-spacer"></div>
-                    {% endif %}
-                {% endfor %}
-            </div>
-
-
-            <!-- calendar grid -->
-            <div class="col p-0">
-
-                <!-- day labels -->
-                <div class="row no-gutters">
-                    {% for day in days %}
-                        <div class="col text-center border border-left-0 border-top-0 p-2">
-                            <h5>{{ day }}</h5>
-                        </div>
-                    {% endfor %}
-                </div>
-
-                <!-- hours -->
-                {% for hour in range(openHours[0], openHours[1] + 1) %}
-                <div class="row no-gutters hour-row">
-
-                    {% for day in days %}
-                        <div class="col border border-left-0 border-top-0 p-1">
-
-                            {% if calendar.get(day, {}).get(hour) %}
-                                {% for event in calendar[day][hour] %}
-                                    <a class="event bg-info text-white">
-                                        {{ hour }}:00 - {{ event.patient }}
-                                    </a>
+    <!-- content under the main header -->
+    <div class="calendar-body">
+        <h3>Upcoming appointments</h3>
+        <!-- calendar contents -->
+        <div class="calendar">
+            <!-- generate each column plus the empty one for the date key -->
+            <!-- uses iterator so events can be plotted -->
+             {% for day in range(8) %}
+                {% if day == 0  %}
+                    <!-- column that displays the hour labels -->
+                    <div class="time-column">
+                        <div class="hour-spacer"></div>
+                        {% for hour in range(openHours[0], openHours[1] + 1) %}
+                            <div class="hour-row">
+                                {% if hour == 0 %}
+                                    <div class="time"></div>
+                                {% elif hour % 2 == 0 %}
+                                    <div class="time">{{ hour }}:00</div>
+                                {% else %}
+                                    <div class="time"></div>
+                                {% endif %}
+                                
+                                
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <!-- column that displays the day and its events -->
+                    <div class="column">
+                        <h5 class="day-header">{{ days[day] }}</h5>
+                        <!-- make a row for every hour -->
+                        {% for hour in range(openHours[0], openHours[1] + 1) %}
+                            {% if calendar.get(days[day], {}).get(hour) %}
+                                {% for event in calendar[days[day]][hour] %}
+                                    <div class="time">
+                                        <div class="event">{{ hour }}:00 - {{ event.patient }}</div>
+                                    </div>
                                 {% endfor %}
+                            {% else %}
+                                <div class="time"></div>
                             {% endif %}
+                        {% endfor %}
+                        
+                    </div>
+                {% endif %}
+            {% endfor %}
 
-                        </div>
-                    {% endfor %}
-
-                </div>
-                {% endfor %}
-
-            </div>
         </div>
-
     </div>
 </body>
 </html>

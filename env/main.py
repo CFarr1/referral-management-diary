@@ -29,7 +29,7 @@ def users_page(request: Request):
 
 @app.get("/calendar", response_class=HTMLResponse)
 def calendar_page(request: Request):    
-    days = [ "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    days = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     openHours = [6, 22]
 
 
@@ -39,6 +39,7 @@ def calendar_page(request: Request):
         {
             "request": request,
             "calendar": CalendarManager.calendar,
+            "events": CalendarManager.events,
             "days" : days,
             "openHours": openHours
         }
