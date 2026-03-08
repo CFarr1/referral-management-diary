@@ -19,7 +19,7 @@
         <div class="row no-gutters">
 
             <!-- time labels -->
-            <div class="col-auto p-0" style="width: 70px; margin-top: 9px;">
+            <div class="col-auto p-0" style="width: 70px; margin-top: 10px;">
                 <div class="time-spacer"></div>
 
                 {% for hour in range(openHours[0], openHours[1] + 1, 2) %} <!-- if even between open hours -->
@@ -38,7 +38,7 @@
                 <!-- day labels -->
                 <div class="row no-gutters">
                     {% for day in days %}
-                        <div class="col text-center border border-left-0 border-top-0 p-2">
+                        <div class="col text-center day-header p-2">
                             <h5>{{ day }}</h5>
                         </div>
                     {% endfor %}
@@ -49,11 +49,11 @@
                 <div class="row no-gutters hour-row">
 
                     {% for day in days %}
-                        <div class="col border border-left-0 border-top-0 p-1">
+                        <div class="col cell p-1">
 
                             {% if calendar.get(day, {}).get(hour) %}
                                 {% for event in calendar[day][hour] %}
-                                    <a class="event bg-info text-white">
+                                    <a class="event text-white" style="{{ 'top: ' ~ (event.date.minute / 1.5) ~ 'px; height: ' ~ (event.duration / 1.5) ~ 'px;' }}">
                                         {{ hour }}:00 - {{ event.patient }}
                                     </a>
                                 {% endfor %}
