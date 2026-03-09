@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
 
+
 class Event:
     _id_counter = 1
 
-    def __init__(self, patient, date, duration):
+    def __init__(self, patient: str, date: datetime, duration: timedelta):
         self.id = Event._id_counter
         Event._id_counter += 1
 
@@ -12,5 +13,5 @@ class Event:
         self.duration = duration
 
     @property
-    def patient(self):
+    def patient(self) -> str:
         return self._patient

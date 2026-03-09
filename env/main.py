@@ -1,77 +1,55 @@
+from datetime import datetime, timedelta
+
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
-import jinja2
-import CalendarManager
-
-
-from fastapi.responses import JSONResponse
-
-
-
+import CalendarManager  # make sure file is CalendarManager.py
 
 
 app = FastAPI()
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="template")
 
-@app.get("/index", response_class=HTMLResponse)
-def users_page(request: Request):
-    users = [
-        {"id": 1, "name": "Alice", "email": "alice@example.com"},
-        {"id": 2, "name": "Bob", "email": "bob@example.com"},
-        {"id": 3, "name": "Charlie", "email": "charlie@example.com"},
-    ]
-
-    return templates.TemplateResponse(
-        "index.html",
-        {
-            "request": request,
-            "users": users
-        }
-    )
 
 @app.get("/calendar", response_class=HTMLResponse)
-def calendar_page(request: Request):    
+def calendar_page(request: Request):
+
+    # Basic year validation: ignore obviously wrong years (e.g. 2020)
+    current_year = datetime.today().year
+    min_valid_year = current_year - 1
+    max_valid_year = current_year + 2
+
+    valid_events = [
+        e for e in CalendarManager.events
+        if min_valid_year <= e.date.year <= max_valid_year
+    ]
+
+    # Build calendar dictionary dynamically
+    calendar = {}
+    for event in valid_events:
+        day = event.date.strftime("%a")  # "Mon", "Tue", ...
+        hour = event.date.hour
+
+        calendar.setdefault(day, {})
+        calendar[day].setdefault(hour, [])
+        calendar[day][hour].append(event)
+
     days = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     openHours = [6, 22]
-
-
 
     return templates.TemplateResponse(
         "calendar.html",
         {
             "request": request,
-            "calendar": CalendarManager.calendar,
-            "events": CalendarManager.events,
-            "days" : days,
-            "openHours": openHours
-        }
+            "calendar": calendar,
+            "events": valid_events,
+            "days": days,
+            "openHours": openHours,
+        },
     )
-
-
-@app.get("/event/{event_id}", response_class=HTMLResponse)
-def event_details(request: Request, event_id: int):
-    # Find the event
-    event = next((e for e in CalendarManager.events if e.id == event_id), None)
-
-    if not event:
-        return HTMLResponse("<h1>Event not found</h1>", status_code=404)
-
-    # Compute end time
-    end_time = event.date + event.duration
-
-    return templates.TemplateResponse(
-        "event.html",
-        {
-            "request": request,
-            "event": event,
-            "end_time": end_time
-        }
-    )
-
 
 
 @app.get("/api/event/{event_id}")
@@ -88,5 +66,5 @@ def api_event_details(event_id: int):
         "patient": event.patient,
         "start": event.date.strftime("%Y-%m-%d %H:%M"),
         "end": end_time.strftime("%Y-%m-%d %H:%M"),
-        "duration": int(event.duration.total_seconds() // 60)
+        "duration": int(event.duration.total_seconds() // 60),
     }
