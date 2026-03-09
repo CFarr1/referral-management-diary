@@ -38,16 +38,13 @@
             <div
               class="event"
               style="
-        top: calc({{ event.date.minute }} / 60 * 100%);
-        height: calc({{ event.duration.total_seconds() / 60 }} / 60 * 100%);
+        top: calc(({{ event.date.minute }}) / 60 * 100%);
+        height: calc(({{ event.duration.total_seconds() / 60 }}) / 60 * 100%);
      "
               onclick="openEvent({{ event.id }})"
             >
-            {% if event.date.minute == 0%}
-              {{ event.patient }} - {{ event.date.hour }}:{{ event.date.minute }}0
-            {% else %}
-              {{ event.patient }} - {{ event.date.hour }}:{{ event.date.minute }}
-            {% endif %}
+              {{ event.patient }} - {{ "%02d"|format(event.date.hour) }}:{{
+              "%02d"|format(event.date.minute) }}
             </div>
 
             {% endfor %} {% endif %}

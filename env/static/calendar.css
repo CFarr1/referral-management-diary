@@ -86,10 +86,10 @@
 }
 
 .event {
-    background-color: #ffffff;
+    background-color: #28637e;
     width: 95%;
     /* height: 90%; */
-    color: rgb(0, 0, 0);
+    color: rgb(255, 255, 255);
     display: flex;
     align-items: start;
     justify-content: flex-start;
