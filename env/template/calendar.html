@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/static/calendar.css" />
+    <link rel="icon" href="/static/favicon.ico">
+    <title>Calendar</title>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <div class="top-bar">
+        <header class="header-main">
+            <div class="header-section">
+                <h1>Health matters</h1>
+            </div>
+            <div class="header-section">
+                <div class="search-bar"></div>
+                <div>
+                    <h3>my account</h3>
+                    <div class="pfp-placeholder"></div>
+                </div>
+            </div>
+        </header>
+    </div>
+
+    <!-- CALENDAR BODY -->
+    <div class="calendar-body">
+
+        <div class="calendar">
+
+            <!-- TIME COLUMN -->
+            <div class="time-column">
+                <div class="header-cell"></div>
+                {% for hour in range(openHours[0], openHours[1] + 1) %}
+                    <div class="row-cell">
+                        {% if hour % 2 == 0 %}
+                            {{ hour }}:00
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- DAY COLUMNS -->
+            {% for day in range(1, 8) %}
+                <div class="column">
+                    <div class="header-cell">{{ days[day] }}</div>
+
+                    {% for hour in range(openHours[0], openHours[1] + 1) %}
+                        <div class="row-cell">
+                            {% if calendar.get(days[day], {}).get(hour) %}
+                                {% for event in calendar[days[day]][hour] %}
+                                    <div class="event" onclick="openEvent({{ event.id }})">
+                                        {{ event.patient }}
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+
+        </div>
+    </div>
+
+    <!-- EVENT MODAL -->
+    <div id="event-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 id="modal-patient"></h3>
+            <p><strong>Start:</strong> <span id="modal-start"></span></p>
+            <p><strong>End:</strong> <span id="modal-end"></span></p>
+            <p><strong>Duration:</strong> <span id="modal-duration"></span> minutes</p>
+            <button class="btn btn-secondary" onclick="closeEvent()">Close</button>
+        </div>
+    </div>
+
+    <script>
+    async function openEvent(id) {
+        const res = await fetch(`/api/event/${id}`);
+        const data = await res.json();
+
+        document.getElementById("modal-patient").innerText = data.patient;
+        document.getElementById("modal-start").innerText = data.start;
+        document.getElementById("modal-end").innerText = data.end;
+        document.getElementById("modal-duration").innerText = data.duration;
+
+        document.getElementById("event-modal").style.display = "flex";
+    }
+
+    function closeEvent() {
+        document.getElementById("event-modal").style.display = "none";
+    }
+    </script>
+
+</body>
+</html>
+
