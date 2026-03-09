@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-import CalendarManager  # make sure file is CalendarManager.py
+import CalendarManager
 
 
 app = FastAPI()
@@ -17,7 +17,7 @@ templates = Jinja2Templates(directory="template")
 @app.get("/calendar", response_class=HTMLResponse)
 def calendar_page(request: Request):
 
-    # Basic year validation: ignore obviously wrong years (e.g. 2020)
+    # Reject dates that are clearly invalid (e.g., 2020)
     current_year = datetime.today().year
     min_valid_year = current_year - 1
     max_valid_year = current_year + 2
@@ -37,8 +37,9 @@ def calendar_page(request: Request):
         calendar[day].setdefault(hour, [])
         calendar[day][hour].append(event)
 
-    days = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    openHours = [6, 22]
+    # Only Monday–Friday
+    days = ["", "Mon", "Tue", "Wed", "Thu", "Fri"]
+    openHours = [8, 18]
 
     return templates.TemplateResponse(
         "calendar.html",

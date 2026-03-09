@@ -1,68 +1,78 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+  <head>
     <title>Calendar</title>
-    <link rel="stylesheet"
-          href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
     <link rel="stylesheet" href="/static/calendar.css" />
-</head>
+  </head>
 
-<body>
-
+  <body>
     <div class="top-bar">
-        <h1>Health matters</h1>
+      <h1>Health matters</h1>
     </div>
 
     <div class="calendar-body">
-        <div class="calendar">
+      <div class="calendar">
+        <!-- Time column -->
+        <div class="time-column">
+          <div class="header-cell"></div>
+          {% for hour in range(openHours[0], openHours[1] + 1) %}
+          <div class="row-cell">
+            {% if hour % 2 == 0 %} {{ hour }}:00 {% endif %}
+          </div>
+          {% endfor %}
+        </div>
 
-            <!-- Time column -->
-            <div class="time-column">
-                <div class="header-cell"></div>
-                {% for hour in range(openHours[0], openHours[1] + 1) %}
-                    <div class="row-cell">
-                        {% if hour % 2 == 0 %}
-                            {{ hour }}:00
-                        {% endif %}
-                    </div>
-                {% endfor %}
+        <!-- Monday–Friday columns -->
+        {% for day in range(1, 6) %}
+        <div class="column">
+          <div class="header-cell">{{ days[day] }}</div>
+
+          {% for hour in range(openHours[0], openHours[1] + 1) %}
+          <div class="row-cell">
+            {% if calendar.get(days[day], {}).get(hour) %} {% for event in
+            calendar[days[day]][hour] %}
+            <div
+              class="event"
+              style="
+        top: calc({{ event.date.minute }} / 60 * 100%);
+        height: calc({{ event.duration.total_seconds() / 60 }} / 60 * 100%);
+     "
+              onclick="openEvent({{ event.id }})"
+            >
+            {% if event.date.minute == 0%}
+              {{ event.patient }} - {{ event.date.hour }}:{{ event.date.minute }}0
+            {% else %}
+              {{ event.patient }} - {{ event.date.hour }}:{{ event.date.minute }}
+            {% endif %}
             </div>
 
-            <!-- Day columns -->
-            {% for day in range(1, 8) %}
-                <div class="column">
-                    <div class="header-cell">{{ days[day] }}</div>
-
-                    {% for hour in range(openHours[0], openHours[1] + 1) %}
-                        <div class="row-cell">
-                            {% if calendar.get(days[day], {}).get(hour) %}
-                                {% for event in calendar[days[day]][hour] %}
-                                    <div class="event" onclick="openEvent({{ event.id }})">
-                                        {{ event.patient }}
-                                    </div>
-                                {% endfor %}
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endfor %}
-
+            {% endfor %} {% endif %}
+          </div>
+          {% endfor %}
         </div>
+        {% endfor %}
+      </div>
     </div>
 
     <!-- Modal -->
     <div id="event-modal" class="modal-overlay">
-        <div class="modal-box">
-            <h3 id="modal-patient"></h3>
-            <p><strong>Start:</strong> <span id="modal-start"></span></p>
-            <p><strong>End:</strong> <span id="modal-end"></span></p>
-            <p><strong>Duration:</strong> <span id="modal-duration"></span> minutes</p>
-            <button class="btn btn-secondary" onclick="closeEvent()">Close</button>
-        </div>
+      <div class="modal-box">
+        <h3 id="modal-patient"></h3>
+        <p><strong>Start:</strong> <span id="modal-start"></span></p>
+        <p><strong>End:</strong> <span id="modal-end"></span></p>
+        <p>
+          <strong>Duration:</strong> <span id="modal-duration"></span> minutes
+        </p>
+        <button class="btn btn-secondary" onclick="closeEvent()">Close</button>
+      </div>
     </div>
 
     <script>
-    async function openEvent(id) {
+      async function openEvent(id) {
         const res = await fetch(`/api/event/${id}`);
         const data = await res.json();
         if (data.error) return;
@@ -73,12 +83,11 @@
         document.getElementById("modal-duration").innerText = data.duration;
 
         document.getElementById("event-modal").style.display = "flex";
-    }
+      }
 
-    function closeEvent() {
+      function closeEvent() {
         document.getElementById("event-modal").style.display = "none";
-    }
+      }
     </script>
-
-</body>
+  </body>
 </html>
