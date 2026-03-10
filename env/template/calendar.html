@@ -1,75 +1,90 @@
-<!DOCTYPE html>
-
+<!doctype html>
 <html>
-
-<head>
-    <link rel="stylesheet"
-          href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" /> <!--Style sheet-->
-    <link rel="stylesheet" href="static/calendar.css" />
-    <link rel="icon" href="/static/favicon.ico">
-
-
+  <head>
     <title>Calendar</title>
-</head>
-<body>
-    <div class="container-fluid">
-        <header>
-            <h4 class="display-4 mb-4 text-center">Upcoming appointments</h4>
-        </header>
-        <div class="row no-gutters">
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="/static/calendar.css" />
+  </head>
 
-            <!-- time labels -->
-            <div class="col-auto p-0" style="width: 70px; margin-top: 10px;">
-                <div class="time-spacer"></div>
+  <body>
+    <div class="top-bar">
+      <h1>Health matters</h1>
+    </div>
 
-                {% for hour in range(openHours[0], openHours[1] + 1, 2) %} <!-- if even between open hours -->
-                    <div class="time">{{ hour }}:00</div>
-
-                    {% if not loop.last %}
-                        <div class="time-spacer"></div>
-                    {% endif %}
-                {% endfor %}
-            </div>
-
-
-            <!-- calendar grid -->
-            <div class="col p-0">
-
-                <!-- day labels -->
-                <div class="row no-gutters">
-                    {% for day in days %}
-                        <div class="col text-center day-header p-2">
-                            <h5>{{ day }}</h5>
-                        </div>
-                    {% endfor %}
-                </div>
-
-                <!-- hours -->
-                {% for hour in range(openHours[0], openHours[1] + 1) %}
-                <div class="row no-gutters hour-row">
-
-                    {% for day in days %}
-                        <div class="col cell p-1">
-
-                            {% if calendar.get(day, {}).get(hour) %}
-                                {% for event in calendar[day][hour] %}
-                                    <a class="event text-white" style="{{ 'top: ' ~ (event.date.minute / 1.5) ~ 'px; height: ' ~ (event.duration / 1.5) ~ 'px;' }}">
-                                        {{ hour }}:00 - {{ event.patient }}
-                                    </a>
-                                {% endfor %}
-                            {% endif %}
-
-                        </div>
-                    {% endfor %}
-
-                </div>
-                {% endfor %}
-
-            </div>
+    <div class="calendar-body">
+      <div class="calendar">
+        <!-- Time column -->
+        <div class="time-column">
+          <div class="header-cell"></div>
+          {% for hour in range(openHours[0], openHours[1] + 1) %}
+          <div class="row-cell">
+            {% if hour % 2 == 0 %} {{ hour }}:00 {% endif %}
+          </div>
+          {% endfor %}
         </div>
 
+        <!-- Monday–Friday columns -->
+        {% for day in range(1, 6) %}
+        <div class="column">
+          <div class="header-cell">{{ days[day] }}</div>
+
+          {% for hour in range(openHours[0], openHours[1] + 1) %}
+          <div class="row-cell">
+            {% if calendar.get(days[day], {}).get(hour) %} {% for event in
+            calendar[days[day]][hour] %}
+            <div
+              class="event"
+              style="
+        top: calc(({{ event.date.minute }}) / 60 * 100%);
+        height: calc(({{ event.duration.total_seconds() / 60 }}) / 60 * 100%);
+     "
+              onclick="openEvent({{ event.id }})"
+            >
+              {{ event.patient }} - {{ "%02d"|format(event.date.hour) }}:{{
+              "%02d"|format(event.date.minute) }}
+            </div>
+
+            {% endfor %} {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
     </div>
-</body>
+
+    <!-- Modal -->
+    <div id="event-modal" class="modal-overlay">
+      <div class="modal-box">
+        <h3 id="modal-patient"></h3>
+        <p><strong>Start:</strong> <span id="modal-start"></span></p>
+        <p><strong>End:</strong> <span id="modal-end"></span></p>
+        <p>
+          <strong>Duration:</strong> <span id="modal-duration"></span> minutes
+        </p>
+        <button class="btn btn-secondary" onclick="closeEvent()">Close</button>
+      </div>
+    </div>
+
+    <script>
+      async function openEvent(id) {
+        const res = await fetch(`/api/event/${id}`);
+        const data = await res.json();
+        if (data.error) return;
+
+        document.getElementById("modal-patient").innerText = data.patient;
+        document.getElementById("modal-start").innerText = data.start;
+        document.getElementById("modal-end").innerText = data.end;
+        document.getElementById("modal-duration").innerText = data.duration;
+
+        document.getElementById("event-modal").style.display = "flex";
+      }
+
+      function closeEvent() {
+        document.getElementById("event-modal").style.display = "none";
+      }
+    </script>
+  </body>
 </html>
-
-

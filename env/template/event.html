@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Event Details</title>
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+</head>
+
+<body class="p-4">
+
+    <h2>Appointment Details</h2>
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <h4 class="card-title">{{ event.patient }}</h4>
+
+            <p><strong>Start:</strong> {{ event.date.strftime("%Y-%m-%d %H:%M") }}</p>
+            <p><strong>End:</strong> {{ end_time.strftime("%Y-%m-%d %H:%M") }}</p>
+            <p><strong>Duration:</strong> {{ event.duration.total_seconds() // 60 }} minutes</p>
+
+            <a href="/calendar" class="btn btn-primary mt-3">Back to Calendar</a>
+        </div>
+    </div>
+
+</body>
+</html>

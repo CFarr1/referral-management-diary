@@ -1,0 +1,3 @@
+to run the project make sure you have a venv that has jinja2, uvicorn and fast api installed
+to run the app use this python -m uvicorn main:app --reload
+and then visit http://127.0.0.1:8000/index (localhost) to see the page
