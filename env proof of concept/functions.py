@@ -90,4 +90,5 @@ def ValidateDate(date, duration, daystart, dayend):
 
     return IsValid
 
-print(ValidateDate(datetime.datetime(2026, 3, 5, 14, 0), 900, 6.00, 22.00))
+# test (should return true, change the minutes (60) -> (900) and it will return false in output because the duration finishes after 10pm)
+print(ValidateDate(datetime.datetime(2026, 3, 5, 14, 0), 60, 6.00, 22.00))
