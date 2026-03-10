@@ -61,6 +61,21 @@ def IsBetweenHours(date, start_hour, end_hour):
 
     return IsValidHours
 
+# Function that checks if the duration is longer than specified i.e. 60 minutes
+def CheckDuration(duration, MinimumMinutes):
+    
+    if not isinstance(duration, (int, float)):
+        raise TypeError("duration is not in a correct format, it must be in int or float!")
+    if not isinstance(MinimumMinutes, (int, float)):
+        raise TypeError("MinimumMinutes is not in a correct format, it must be in int or float!")
+    
+    value = True
+
+    if duration < MinimumMinutes:
+        value = False
+
+    return value
+
 # Function to return if a date is valid for calendar
 def ValidateDate(date, duration, daystart, dayend):
 
@@ -91,4 +106,13 @@ def ValidateDate(date, duration, daystart, dayend):
     return IsValid
 
 # test (should return true, change the minutes (60) -> (900) and it will return false in output because the duration finishes after 10pm)
-print(ValidateDate(datetime.datetime(2026, 3, 5, 14, 0), 60, 6.00, 22.00))
+
+# (date, duration, start of hour, end of hour, minimum duration)
+# -> Date, in datetime the date of meeting
+# -> Duration, in minutes int or float
+# -> start/end of hour is if the meeting takes place outside of these hours then it should return false (outside of working hours), HOWEVER start of hour has to be lower than end so 6am to 10pm
+# -> minimum duration, the minimum the meeting has to have or it will return false by standard should be 60 minutes
+
+# ---> example ValidateDate(datetime.datetime(2026, 3, 5, 14, 0), 60, 6.00, 22.00, 60)
+
+print(ValidateDate(datetime.datetime(2026, 3, 5, 14, 0), 60, 6.00, 22.00, 60))
