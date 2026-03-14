@@ -2,7 +2,6 @@
 <html>
   <head>
     <title>Calendar</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="/static/calendar.css" />
   </head>
 
@@ -23,7 +22,7 @@
             </button>
           </div>
           <button class="account-btn">
-            <span class="account-btn-label">My account</span>
+            My account
             <div class="account-icon">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
@@ -94,29 +93,13 @@
       ];
     </script>
     <div id="event-modal" class="modal-overlay">
-      <div class="modal-box event-modal-box">
-        <div class="event-modal-header">
-          <div class="event-modal-dot"></div>
-          <h3 id="modal-patient" class="event-modal-name"></h3>
-        </div>
-        <div class="event-modal-body">
-          <div class="event-modal-row">
-            <span class="event-modal-label">Date</span>
-            <span id="modal-date" class="event-modal-value"></span>
-          </div>
-          <div class="event-modal-row">
-            <span class="event-modal-label">Start</span>
-            <span id="modal-start" class="event-modal-value"></span>
-          </div>
-          <div class="event-modal-row">
-            <span class="event-modal-label">End</span>
-            <span id="modal-end" class="event-modal-value"></span>
-          </div>
-          <div class="event-modal-row">
-            <span class="event-modal-label">Duration</span>
-            <span id="modal-duration" class="event-modal-value"></span>
-          </div>
-        </div>
+      <div class="modal-box">
+        <h3 id="modal-patient"></h3>
+        <p><strong>Start:</strong> <span id="modal-start"></span></p>
+        <p><strong>End:</strong> <span id="modal-end"></span></p>
+        <p>
+          <strong>Duration:</strong> <span id="modal-duration"></span> minutes
+        </p>
         <button class="modal-close-btn" onclick="closeEvent()">Close</button>
       </div>
     </div>
@@ -254,12 +237,9 @@
       }
 
       function renderMonth() {
-        const isMobile   = window.innerWidth < 600;
         const monthNames = ['January','February','March','April','May','June',
                             'July','August','September','October','November','December'];
-        const dayNames   = isMobile
-            ? ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
-            : ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+        const dayNames   = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
         document.getElementById('month-label').textContent = `${monthNames[currentMonth]} ${currentYear}`;
 
@@ -290,15 +270,14 @@
           const evts = eventMap[key] || [];
           const isToday = key === todayKey;
 
-          html += `<div class="month-cell${isToday ? ' today' : ''}${evts.length > 1 ? ' multi' : ''}">`;
+          html += `<div class="month-cell${isToday ? ' today' : ''}">`;
           html += `<span class="month-day-num${isToday ? ' today-num' : ''}">${d}</span>`;
 
           if (evts.length === 1) {
             html += `<div class="month-event" onclick="openEvent(${evts[0].id})">${evts[0].start.slice(11,16)}–${evts[0].end.slice(11,16)}</div>`;
           } else if (evts.length > 1) {
             const ids = JSON.stringify(evts.map(e => e.id));
-            html += `<div class="month-event" onclick='openDayModal(${JSON.stringify(key)}, ${ids})'>${evts[0].start.slice(11,16)}–${evts[0].end.slice(11,16)}</div>`;
-            html += `<div class="month-more" onclick='openDayModal(${JSON.stringify(key)}, ${ids})'>+${evts.length - 1} more</div>`;
+            html += `<div class="month-event multi" onclick='openDayModal(${JSON.stringify(key)}, ${ids})'>Multiple appointments</div>`;
           }
 
           html += `</div>`;
@@ -314,14 +293,10 @@
         const data = await res.json();
         if (data.error) return;
 
-        const startDate = new Date(data.start.replace(' ', 'T'));
-        const dateStr = startDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-
         document.getElementById("modal-patient").innerText  = data.patient;
-        document.getElementById("modal-date").innerText     = dateStr;
-        document.getElementById("modal-start").innerText    = data.start.slice(11);
-        document.getElementById("modal-end").innerText      = data.end.slice(11);
-        document.getElementById("modal-duration").innerText = `${data.duration} minutes`;
+        document.getElementById("modal-start").innerText    = data.start;
+        document.getElementById("modal-end").innerText      = data.end;
+        document.getElementById("modal-duration").innerText = data.duration;
         document.getElementById("event-modal").style.display = "flex";
       }
 

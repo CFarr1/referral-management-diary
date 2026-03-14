@@ -25,7 +25,7 @@ def calendar_page(request: Request):
     # Filter to a reasonable date range
     current_year = datetime.today().year
     valid_events = [
-        e for e in CalendarManager.events
+        e for e in CalendarManager.getEvents("U001").events
         if (current_year - 1) <= e.date.year <= (current_year + 2)
     ]
 
@@ -40,7 +40,7 @@ def calendar_page(request: Request):
 
 @app.get("/api/event/{event_id}")
 def api_event_details(event_id: int):
-    event = next((e for e in CalendarManager.events if e.id == event_id), None)
+    event = next((e for e in CalendarManager.getEvents("U001").events if e.id == event_id), None)
 
     if not event:
         return JSONResponse({"error": "Event not found"}, status_code=404)
