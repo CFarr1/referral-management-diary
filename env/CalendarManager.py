@@ -3,23 +3,27 @@ from CEvent import Event
 from CUser import User
 import pandas as pd
 
-eventdf = pd.read_excel("TestData.xlsx")
+eventdf = pd.read_excel("TestData.xlsx", parse_dates=["date"])
 userdf  = pd.read_excel("UserData.xlsx")
 
 def getUser(userID: str) -> User:
     events = []
 
-    # Load events for this user
     current_rows = eventdf[eventdf["userID"] == userID]
     for _, row in current_rows.iterrows():
+        date = row["date"]
+        # Handle both datetime and string formats
+        if isinstance(date, str):
+            date = datetime.strptime(date.strip(), "%Y-%m-%d %H:%M")
+        elif hasattr(date, 'to_pydatetime'):
+            date = date.to_pydatetime()
+
         events.append(Event(
             row["patient"],
-            datetime(row["date"].year, row["date"].month, row["date"].day,
-                     row["date"].hour, row["date"].minute),
+            datetime(date.year, date.month, date.day, date.hour, date.minute),
             timedelta(minutes=int(row["duration"]))
         ))
 
-    # Look up the user's display name from UserData.xlsx
     user_row = userdf[userdf["userID"] == userID]
     username = user_row.iloc[0]["user"] if not user_row.empty else userID
 

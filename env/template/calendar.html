@@ -93,13 +93,29 @@
       ];
     </script>
     <div id="event-modal" class="modal-overlay">
-      <div class="modal-box">
-        <h3 id="modal-patient"></h3>
-        <p><strong>Start:</strong> <span id="modal-start"></span></p>
-        <p><strong>End:</strong> <span id="modal-end"></span></p>
-        <p>
-          <strong>Duration:</strong> <span id="modal-duration"></span> minutes
-        </p>
+      <div class="modal-box event-modal-box">
+        <div class="event-modal-header">
+          <div class="event-modal-dot"></div>
+          <h3 id="modal-patient" class="event-modal-name"></h3>
+        </div>
+        <div class="event-modal-body">
+          <div class="event-modal-row">
+            <span class="event-modal-label">Date</span>
+            <span id="modal-date" class="event-modal-value"></span>
+          </div>
+          <div class="event-modal-row">
+            <span class="event-modal-label">Start</span>
+            <span id="modal-start" class="event-modal-value"></span>
+          </div>
+          <div class="event-modal-row">
+            <span class="event-modal-label">End</span>
+            <span id="modal-end" class="event-modal-value"></span>
+          </div>
+          <div class="event-modal-row">
+            <span class="event-modal-label">Duration</span>
+            <span id="modal-duration" class="event-modal-value"></span>
+          </div>
+        </div>
         <button class="modal-close-btn" onclick="closeEvent()">Close</button>
       </div>
     </div>
@@ -237,9 +253,12 @@
       }
  
       function renderMonth() {
+        const isMobile   = window.innerWidth < 600;
         const monthNames = ['January','February','March','April','May','June',
                             'July','August','September','October','November','December'];
-        const dayNames   = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+        const dayNames   = isMobile
+            ? ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+            : ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
  
         document.getElementById('month-label').textContent = `${monthNames[currentMonth]} ${currentYear}`;
  
@@ -270,14 +289,15 @@
           const evts = eventMap[key] || [];
           const isToday = key === todayKey;
  
-          html += `<div class="month-cell${isToday ? ' today' : ''}">`;
+          html += `<div class="month-cell${isToday ? ' today' : ''}${evts.length > 1 ? ' multi' : ''}">`;
           html += `<span class="month-day-num${isToday ? ' today-num' : ''}">${d}</span>`;
  
           if (evts.length === 1) {
             html += `<div class="month-event" onclick="openEvent(${evts[0].id})">${evts[0].start.slice(11,16)}–${evts[0].end.slice(11,16)}</div>`;
           } else if (evts.length > 1) {
             const ids = JSON.stringify(evts.map(e => e.id));
-            html += `<div class="month-event multi" onclick='openDayModal(${JSON.stringify(key)}, ${ids})'>Multiple appointments</div>`;
+            html += `<div class="month-event" onclick='openDayModal(${JSON.stringify(key)}, ${ids})'>${evts[0].start.slice(11,16)}–${evts[0].end.slice(11,16)}</div>`;
+            html += `<div class="month-more" onclick='openDayModal(${JSON.stringify(key)}, ${ids})'>+${evts.length - 1} more</div>`;
           }
  
           html += `</div>`;
@@ -292,11 +312,15 @@
         const res  = await fetch(`/api/event/${id}`);
         const data = await res.json();
         if (data.error) return;
- 
+
+        const startDate = new Date(data.start.replace(' ', 'T'));
+        const dateStr = startDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
         document.getElementById("modal-patient").innerText  = data.patient;
-        document.getElementById("modal-start").innerText    = data.start;
-        document.getElementById("modal-end").innerText      = data.end;
-        document.getElementById("modal-duration").innerText = data.duration;
+        document.getElementById("modal-date").innerText     = dateStr;
+        document.getElementById("modal-start").innerText    = data.start.slice(11);
+        document.getElementById("modal-end").innerText      = data.end.slice(11);
+        document.getElementById("modal-duration").innerText = `${data.duration} minutes`;
         document.getElementById("event-modal").style.display = "flex";
       }
  
