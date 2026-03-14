@@ -19,28 +19,44 @@ def root():
     return RedirectResponse(url="/calendar")
 
 
+# Build user cache once at startup
+_user_cache: dict = {}
+
+def get_user(user_id: str):
+    if user_id not in _user_cache:
+        _user_cache[user_id] = CalendarManager.getUser(user_id)
+    return _user_cache[user_id]
+
+
 @app.get("/calendar", response_class=HTMLResponse)
 def calendar_page(request: Request):
+    # TODO: replace "U001" with session/auth user ID when auth is added
+    current_user = get_user("U001")
 
-    # Filter to a reasonable date range
     current_year = datetime.today().year
     valid_events = [
-        e for e in CalendarManager.getEvents("U001").events
+        e for e in current_user.events
         if (current_year - 1) <= e.date.year <= (current_year + 2)
     ]
 
     return templates.TemplateResponse(
         "calendar.html",
         {
-            "request": request,
-            "events": valid_events,
+            "request":  request,
+            "events":   valid_events,
+            "username": current_user.user,
         },
     )
 
 
 @app.get("/api/event/{event_id}")
 def api_event_details(event_id: int):
-    event = next((e for e in CalendarManager.getEvents("U001").events if e.id == event_id), None)
+    # Search across all users using the cache
+    all_events = []
+    for uid in CalendarManager.eventdf["userID"].unique():
+        all_events.extend(get_user(uid).events)
+
+    event = next((e for e in all_events if e.id == event_id), None)
 
     if not event:
         return JSONResponse({"error": "Event not found"}, status_code=404)
