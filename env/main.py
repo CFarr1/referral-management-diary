@@ -31,7 +31,7 @@ def get_user(user_id: str):
 @app.get("/calendar", response_class=HTMLResponse)
 def calendar_page(request: Request):
     # TODO: replace "U001" with session/auth user ID when auth is added
-    current_user = get_user("U001")
+    current_user = get_user("U002")
 
     current_year = datetime.today().year
     valid_events = [
