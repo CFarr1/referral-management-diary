@@ -291,11 +291,17 @@ header.top-bar {
 }
 
 .time-column {
-    width: 8%;
+    width: 52px;
+    flex-shrink: 0;
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: white;
 }
 
 .column {
-    width: calc(92% / 5);
+    flex: 1;
+    min-width: 120px;
     border-left: none;
 }
 
@@ -309,6 +315,7 @@ header.top-bar {
     border-bottom: 1px solid black;
     font-weight: bold;
     line-height: 1.2;
+    background: white;
 }
 
 .row-cell {
@@ -434,7 +441,6 @@ header.top-bar {
 .event {
     background-color: #28637e;
     width: 95%;
-    /* height: 90%; */
     color: rgb(255, 255, 255);
     display: flex;
     align-items: start;
@@ -443,9 +449,12 @@ header.top-bar {
     border: #196082 3px solid;
     cursor: pointer;
     z-index: 1;
-    /* left: 5%; */
     position: absolute;
     padding-left: 6px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 0.85rem;
 }
 
 
@@ -578,40 +587,50 @@ header.top-bar {
     min-height: unset;
     border-right: 1px solid #c0c0c0;
     border-bottom: 1px solid #c0c0c0;
-    padding: 0.3rem 0.4rem;
+    padding: 0.2rem 0.3rem;
     overflow: hidden;
     position: relative;
-}
-
-.month-cell.empty {
-    background: #fafafa;
 }
 
 .month-day-num {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
-    font-size: 0.85rem;
+    width: 22px;
+    height: 22px;
+    font-size: 0.8rem;
     font-weight: 600;
     color: #444;
     border-radius: 50%;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.1rem;
 }
 
 .month-event {
     background: #28637e;
     color: white;
     border-radius: 4px;
-    font-size: 0.75rem;
-    padding: 0.2rem 0.4rem;
+    font-size: 0.72rem;
+    padding: 0.15rem 0.4rem;
     cursor: pointer;
-    margin-top: 0.2rem;
+    margin-top: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     border: 2px solid #196082;
+}
+
+.month-more {
+    font-size: 0.65rem;
+    color: #1a6645;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0;
+    margin-top: 0.1rem;
+    line-height: 1.2;
+}
+
+.month-cell.empty {
+    background: #fafafa;
 }
 
 .month-event:hover {
@@ -630,15 +649,6 @@ header.top-bar {
 
 .month-cell.multi .month-event:hover {
     background: #145230;
-}
-
-.month-more {
-    font-size: 0.7rem;
-    color: #1a6645;
-    font-weight: 700;
-    cursor: pointer;
-    padding: 0.1rem 0.2rem;
-    margin-top: 0.1rem;
 }
 
 .month-more:hover {
