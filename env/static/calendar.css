@@ -358,6 +358,74 @@ header.top-bar {
     background-color: #5a6268;
 }
 
+/* ── Event detail modal ── */
+.event-modal-box {
+    padding: 0;
+    overflow: hidden;
+    width: 340px;
+}
+
+.event-modal-header {
+    background: #196082;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.event-modal-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+    opacity: 0.8;
+    flex-shrink: 0;
+}
+
+.event-modal-name {
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.event-modal-body {
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.event-modal-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    background: #f0f6f9;
+    border-left: 4px solid #196082;
+    border-radius: 4px;
+    padding: 0.4rem 0.75rem;
+}
+
+.event-modal-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #196082;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    min-width: 60px;
+    flex-shrink: 0;
+}
+
+.event-modal-value {
+    font-size: 0.9rem;
+    color: #222;
+}
+
+.event-modal-box .modal-close-btn {
+    margin: 0 1.5rem 1.25rem;
+    display: block;
+}
+
 .row-cell {
     position: relative;
 
@@ -506,11 +574,12 @@ header.top-bar {
 }
 
 .month-cell {
-    min-height: 80px;
+    height: 80px;
+    min-height: unset;
     border-right: 1px solid #c0c0c0;
     border-bottom: 1px solid #c0c0c0;
     padding: 0.3rem 0.4rem;
-    vertical-align: top;
+    overflow: hidden;
     position: relative;
 }
 
@@ -549,13 +618,31 @@ header.top-bar {
     background: #196082;
 }
 
-.month-event.multi {
-    background: #1a5c3a;
+/* Multi-appointment day */
+.month-cell.multi {
+    background: #f0f7f4;
+}
+
+.month-cell.multi .month-event {
+    background: #1a6645;
     border-color: #145230;
 }
 
-.month-event.multi:hover {
+.month-cell.multi .month-event:hover {
     background: #145230;
+}
+
+.month-more {
+    font-size: 0.7rem;
+    color: #1a6645;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0.1rem 0.2rem;
+    margin-top: 0.1rem;
+}
+
+.month-more:hover {
+    text-decoration: underline;
 }
 
 /* ── Day modal list ── */
@@ -565,6 +652,23 @@ header.top-bar {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    max-height: 280px;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.day-modal-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.day-modal-list::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 4px;
+}
+
+.day-modal-list::-webkit-scrollbar-thumb {
+    background: #196082;
+    border-radius: 4px;
 }
 
 .day-modal-item {
@@ -578,4 +682,200 @@ header.top-bar {
 .day-modal-duration {
     color: #666;
     font-size: 0.82rem;
+}
+
+
+/* ════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+   Desktop  : 1024px+   (default styles above)
+   Tablet   : 600–1023px
+   Mobile   : < 600px
+════════════════════════════════════════════ */
+
+/* ── Tablet (600–1023px) ── */
+@media (max-width: 1023px) {
+
+    /* Header */
+    .top-bar-main {
+        padding: 0.5rem 1rem;
+        min-height: 56px;
+    }
+
+    .top-bar-brand h1 { font-size: 1.25rem; }
+    .logo-img { width: 38px; height: 38px; }
+
+    .search-box input { width: 120px; }
+
+    .account-btn-label { display: none; }
+    .account-btn { gap: 0; padding: 0.25rem; }
+
+    .nav-link { font-size: 0.78rem; padding: 0.5rem 0.4rem; }
+    .page-title h2 { font-size: 1.1rem; }
+
+    /* Allow the whole page to scroll vertically on tablet */
+    body {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .content-area { flex: unset; }
+
+    .calendar-body {
+        flex: unset;
+        overflow: visible;
+        padding: 0.4rem 0.5rem;
+    }
+
+    /* Week: fixed column sizes, scroll both axes */
+    .week-grid-wrap {
+        overflow-x: auto;
+        overflow-y: visible;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .week-grid-wrap .calendar {
+        min-width: 640px;
+        height: auto;
+    }
+
+    .time-column {
+        width: 52px;
+        flex-shrink: 0;
+    }
+
+    .column {
+        min-width: 100px;
+        flex: 1;
+        width: auto;
+    }
+
+    .row-cell {
+        min-height: 52px;
+        flex: unset;
+    }
+
+    .header-cell { flex: 0 0 48px; }
+
+    /* Month */
+    .month-cell { height: 64px; min-height: unset; }
+    .month-day-name { font-size: 0.75rem; }
+    .month-event { font-size: 0.68rem; padding: 0.15rem 0.3rem; }
+
+    .modal-box { width: 90%; max-width: 420px; }
+}
+
+
+/* ── Mobile (< 600px) ── */
+@media (max-width: 599px) {
+
+    body {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    /* Header */
+    .top-bar-main {
+        padding: 0.5rem 0.75rem;
+        min-height: unset;
+    }
+
+    .top-bar-brand h1 { font-size: 1.05rem; }
+    .logo-img { width: 30px; height: 30px; }
+
+    .search-box { display: none; }
+    .account-btn { padding: 0.2rem; gap: 0; }
+
+    /* Nav: 2×2 grid */
+    .top-bar-nav {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .nav-link {
+        font-size: 0.72rem;
+        padding: 0.45rem 0.2rem;
+        border-right: 1px solid rgba(255,255,255,0.25);
+        border-bottom: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .nav-link:nth-child(2),
+    .nav-link:last-child { border-right: none; }
+
+    .nav-link:nth-child(3),
+    .nav-link:last-child { border-bottom: none; }
+
+    /* Page title stacks */
+    .page-title {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.4rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .page-title h2 { font-size: 1rem; }
+
+    .content-area { flex: unset; }
+
+    .calendar-body {
+        flex: unset;
+        overflow: visible;
+        padding: 0.25rem 0.4rem;
+    }
+
+    #month-view { overflow: visible; }
+
+    /* Week: scroll both axes */
+    .week-grid-wrap {
+        overflow-x: auto;
+        overflow-y: visible;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .week-grid-wrap .calendar {
+        min-width: 750px;
+        height: auto;
+    }
+
+    .time-column {
+        width: 44px;
+        flex-shrink: 0;
+    }
+
+    .column {
+        min-width: 120px;
+        flex: 1;
+        width: auto;
+    }
+
+    .row-cell {
+        min-height: 48px;
+        flex: unset;
+    }
+
+    .header-cell { flex: 0 0 44px; }
+
+    /* Month */
+    .month-cell { height: 52px; min-height: unset; padding: 0.2rem; overflow: hidden; }
+    .month-day-name { font-size: 0.65rem; padding: 0.2rem 0; }
+    .month-day-num { width: 20px; height: 20px; font-size: 0.72rem; }
+    .month-event {
+        font-size: 0.6rem;
+        padding: 0.1rem 0.2rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .month-nav-label { font-size: 0.88rem; min-width: 130px; }
+
+    /* Modal */
+    .modal-box {
+        width: 95%;
+        padding: 1.1rem;
+        border-radius: 8px;
+    }
 }
