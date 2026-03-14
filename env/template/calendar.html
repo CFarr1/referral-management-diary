@@ -2,89 +2,363 @@
 <html>
   <head>
     <title>Calendar</title>
-    <link
-      rel="stylesheet"
-      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="/static/calendar.css" />
   </head>
 
   <body>
-    <div class="top-bar">
-      <h1>Health matters</h1>
-    </div>
-
-    <div class="calendar-body">
-      <div class="calendar">
-        <!-- Time column -->
-        <div class="time-column">
-          <div class="header-cell"></div>
-          {% for hour in range(openHours[0], openHours[1] + 1) %}
-          <div class="row-cell">
-            {% if hour % 2 == 0 %} {{ hour }}:00 {% endif %}
-          </div>
-          {% endfor %}
+    <header class="top-bar">
+      <div class="top-bar-main">
+        <div class="top-bar-brand">
+          <img src="/static/ULAN Crest.png" alt="ULAN Crest" class="logo-img" />
+          <h1>Health matters</h1>
         </div>
-
-        <!-- Monday–Friday columns -->
-        {% for day in range(1, 6) %}
-        <div class="column">
-          <div class="header-cell">{{ days[day] }}</div>
-
-          {% for hour in range(openHours[0], openHours[1] + 1) %}
-          <div class="row-cell">
-            {% if calendar.get(days[day], {}).get(hour) %} {% for event in
-            calendar[days[day]][hour] %}
-            <div
-              class="event"
-              style="
-        top: calc(({{ event.date.minute }}) / 60 * 100%);
-        height: calc(({{ event.duration.total_seconds() / 60 }}) / 60 * 100%);
-     "
-              onclick="openEvent({{ event.id }})"
-            >
-              {{ event.patient }} - {{ "%02d"|format(event.date.hour) }}:{{
-              "%02d"|format(event.date.minute) }}
+        <div class="top-bar-actions">
+          <div class="search-box">
+            <input type="text" placeholder="" aria-label="Search" />
+            <button class="search-btn" aria-label="Submit search">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </button>
+          </div>
+          <button class="account-btn">
+            <span class="account-btn-label">My account</span>
+            <div class="account-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              </svg>
             </div>
-
-            {% endfor %} {% endif %}
-          </div>
-          {% endfor %}
+          </button>
         </div>
-        {% endfor %}
+      </div>
+      <nav class="top-bar-nav">
+        <a href="/self-referrals" class="nav-link">Self referrals</a>
+        <a href="/advice-sheets" class="nav-link">Advice sheets</a>
+        <a href="/notifications" class="nav-link">Notifications</a>
+        <a href="/calendar" class="nav-link nav-link-active">Upcoming appointments</a>
+      </nav>
+    </header>
+
+    <div class="page-title">
+      <h2>Appointments</h2>
+      <div class="view-toggle">
+        <button class="toggle-btn active" id="btn-week" onclick="setView('week')">Week</button>
+        <button class="toggle-btn" id="btn-month" onclick="setView('month')">Month</button>
       </div>
     </div>
 
-    <!-- Modal -->
-    <div id="event-modal" class="modal-overlay">
+    <div class="content-area">
+    <div class="calendar-body" id="week-view">
+      <div class="week-nav">
+        <button class="month-nav-btn" onclick="changeWeek(-1)">&#8249;</button>
+        <span class="month-nav-label" id="week-label"></span>
+        <button class="month-nav-btn" onclick="changeWeek(1)">&#8250;</button>
+      </div>
+      <div id="week-grid" class="week-grid-wrap"></div>
+    </div>
+
+    <!-- Month view -->
+    <div class="calendar-body" id="month-view" style="display:none; overflow-y: auto;">
+      <div class="month-nav">
+        <button class="month-nav-btn" onclick="changeMonth(-1)">&#8249;</button>
+        <span class="month-nav-label" id="month-label"></span>
+        <button class="month-nav-btn" onclick="changeMonth(1)">&#8250;</button>
+      </div>
+      <div class="month-grid" id="month-grid"></div>
+    </div>
+
+    </div><!-- end content-area -->
+
+    <!-- Multi-event day modal -->
+    <div id="day-modal" class="modal-overlay">
       <div class="modal-box">
-        <h3 id="modal-patient"></h3>
-        <p><strong>Start:</strong> <span id="modal-start"></span></p>
-        <p><strong>End:</strong> <span id="modal-end"></span></p>
-        <p>
-          <strong>Duration:</strong> <span id="modal-duration"></span> minutes
-        </p>
-        <button class="btn btn-secondary" onclick="closeEvent()">Close</button>
+        <h3 id="day-modal-title"></h3>
+        <ul id="day-modal-list" class="day-modal-list"></ul>
+        <button class="modal-close-btn" onclick="closeDayModal()">Close</button>
+      </div>
+    </div>
+
+    <!-- Inject all events as JSON for month view -->
+    <script>
+      const ALL_EVENTS = [
+        {% for e in events %}
+        {
+          id: {{ e.id }},
+          patient: {{ e.patient | tojson }},
+          start: {{ e.date.strftime("%Y-%m-%d %H:%M") | tojson }},
+          end: {{ (e.date + e.duration).strftime("%Y-%m-%d %H:%M") | tojson }},
+          duration: {{ (e.duration.total_seconds() // 60) | int }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+      ];
+    </script>
+    <div id="event-modal" class="modal-overlay">
+      <div class="modal-box event-modal-box">
+        <div class="event-modal-header">
+          <div class="event-modal-dot"></div>
+          <h3 id="modal-patient" class="event-modal-name"></h3>
+        </div>
+        <div class="event-modal-body">
+          <div class="event-modal-row">
+            <span class="event-modal-label">Date</span>
+            <span id="modal-date" class="event-modal-value"></span>
+          </div>
+          <div class="event-modal-row">
+            <span class="event-modal-label">Start</span>
+            <span id="modal-start" class="event-modal-value"></span>
+          </div>
+          <div class="event-modal-row">
+            <span class="event-modal-label">End</span>
+            <span id="modal-end" class="event-modal-value"></span>
+          </div>
+          <div class="event-modal-row">
+            <span class="event-modal-label">Duration</span>
+            <span id="modal-duration" class="event-modal-value"></span>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeEvent()">Close</button>
       </div>
     </div>
 
     <script>
+      const OPEN_HOUR_START = 8;
+      const OPEN_HOUR_END   = 18;
+      const HOURS = OPEN_HOUR_END - OPEN_HOUR_START + 1;
+
+      // ── Helpers ──
+      function dateKey(d) {
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      }
+
+      function getMondayOf(d) {
+        const day = new Date(d);
+        const dow = (day.getDay() + 6) % 7; // Mon=0
+        day.setDate(day.getDate() - dow);
+        day.setHours(0,0,0,0);
+        return day;
+      }
+
+      function formatDate(d) {
+        return d.toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+      }
+
+      // ── State ──
+      let weekOffset  = 0; // 0 = current week
+      let currentYear  = new Date().getFullYear();
+      let currentMonth = new Date().getMonth();
+
+      // ── View toggle ──
+      function setView(view) {
+        const weekView  = document.getElementById('week-view');
+        const monthView = document.getElementById('month-view');
+        const btnWeek   = document.getElementById('btn-week');
+        const btnMonth  = document.getElementById('btn-month');
+
+        if (view === 'week') {
+          weekView.style.display  = '';
+          monthView.style.display = 'none';
+          btnWeek.classList.add('active');
+          btnMonth.classList.remove('active');
+          renderWeek();
+        } else {
+          weekView.style.display  = 'none';
+          monthView.style.display = '';
+          btnWeek.classList.remove('active');
+          btnMonth.classList.add('active');
+          renderMonth();
+        }
+      }
+
+      // ── Week view ──
+      function changeWeek(delta) {
+        weekOffset += delta;
+        renderWeek();
+      }
+
+      function renderWeek() {
+        const today  = new Date();
+        const monday = getMondayOf(today);
+        monday.setDate(monday.getDate() + weekOffset * 7);
+
+        // Build the 5 weekdays
+        const days = [];
+        for (let i = 0; i < 5; i++) {
+          const d = new Date(monday);
+          d.setDate(monday.getDate() + i);
+          days.push(d);
+        }
+
+        // Week label
+        const friday = days[4];
+        document.getElementById('week-label').textContent =
+          `${formatDate(monday)} – ${formatDate(friday)} ${friday.getFullYear()}`;
+
+        // Build event map for this week
+        const eventMap = {};
+        ALL_EVENTS.forEach(e => {
+          const k = e.start.slice(0, 10);
+          if (!eventMap[k]) eventMap[k] = [];
+          eventMap[k].push(e);
+        });
+
+        // Total height of grid area in px (we'll use CSS % so just use slot count)
+        const dayNames = ['Mon','Tue','Wed','Thu','Fri'];
+
+        let html = '<div class="calendar">';
+
+        // Time column
+        html += '<div class="time-column"><div class="header-cell"></div>';
+        for (let h = OPEN_HOUR_START; h <= OPEN_HOUR_END; h++) {
+          html += `<div class="row-cell">${h % 2 === 0 ? h + ':00' : ''}</div>`;
+        }
+        html += '</div>';
+
+        // Day columns
+        days.forEach((day, i) => {
+          const k    = dateKey(day);
+          const evts = eventMap[k] || [];
+          const isToday = dateKey(day) === dateKey(new Date());
+
+          html += `<div class="column${isToday ? ' today' : ''}">`;
+          html += `<div class="header-cell"><span class="header-day">${dayNames[i]}</span><span class="header-date">${day.getDate()}</span></div>`;
+
+          for (let h = OPEN_HOUR_START; h <= OPEN_HOUR_END; h++) {
+            html += `<div class="row-cell">`;
+            evts.forEach(e => {
+              const startDate = new Date(e.start.replace(' ', 'T'));
+              if (startDate.getHours() === h) {
+                const topPct    = (startDate.getMinutes() / 60) * 100;
+                const heightPct = (e.duration / 60) * 100;
+                html += `<div class="event" style="top:${topPct}%;height:${heightPct}%" onclick="openEvent(${e.id})">
+                  ${e.patient} - ${e.start.slice(11,16)}
+                </div>`;
+              }
+            });
+            html += `</div>`;
+          }
+
+          html += `</div>`;
+        });
+
+        html += '</div>';
+        document.getElementById('week-grid').innerHTML = html;
+      }
+
+      // ── Month view ──
+      function changeMonth(delta) {
+        currentMonth += delta;
+        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+        if (currentMonth < 0)  { currentMonth = 11; currentYear--; }
+        renderMonth();
+      }
+
+      function renderMonth() {
+        const isMobile   = window.innerWidth < 600;
+        const monthNames = ['January','February','March','April','May','June',
+                            'July','August','September','October','November','December'];
+        const dayNames   = isMobile
+            ? ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+            : ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+        document.getElementById('month-label').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+        const eventMap = {};
+        ALL_EVENTS.forEach(e => {
+          const k = e.start.slice(0, 10);
+          if (!eventMap[k]) eventMap[k] = [];
+          eventMap[k].push(e);
+        });
+
+        const firstDay    = new Date(currentYear, currentMonth, 1);
+        const startDow    = (firstDay.getDay() + 6) % 7;
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        const todayKey    = dateKey(new Date());
+
+        let html = '<div class="month-day-headers">';
+        dayNames.forEach(d => { html += `<div class="month-day-name">${d}</div>`; });
+        html += '</div><div class="month-cells">';
+
+        for (let i = 0; i < startDow; i++) {
+          html += '<div class="month-cell empty"></div>';
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const mm   = String(currentMonth + 1).padStart(2, '0');
+          const dd   = String(d).padStart(2, '0');
+          const key  = `${currentYear}-${mm}-${dd}`;
+          const evts = eventMap[key] || [];
+          const isToday = key === todayKey;
+
+          html += `<div class="month-cell${isToday ? ' today' : ''}${evts.length > 1 ? ' multi' : ''}">`;
+          html += `<span class="month-day-num${isToday ? ' today-num' : ''}">${d}</span>`;
+
+          if (evts.length === 1) {
+            html += `<div class="month-event" onclick="openEvent(${evts[0].id})">${evts[0].start.slice(11,16)}–${evts[0].end.slice(11,16)}</div>`;
+          } else if (evts.length > 1) {
+            const ids = JSON.stringify(evts.map(e => e.id));
+            html += `<div class="month-event" onclick='openDayModal(${JSON.stringify(key)}, ${ids})'>${evts[0].start.slice(11,16)}–${evts[0].end.slice(11,16)}</div>`;
+            html += `<div class="month-more" onclick='openDayModal(${JSON.stringify(key)}, ${ids})'>+${evts.length - 1} more</div>`;
+          }
+
+          html += `</div>`;
+        }
+
+        html += '</div>';
+        document.getElementById('month-grid').innerHTML = html;
+      }
+
+      // ── Single event modal ──
       async function openEvent(id) {
-        const res = await fetch(`/api/event/${id}`);
+        const res  = await fetch(`/api/event/${id}`);
         const data = await res.json();
         if (data.error) return;
 
-        document.getElementById("modal-patient").innerText = data.patient;
-        document.getElementById("modal-start").innerText = data.start;
-        document.getElementById("modal-end").innerText = data.end;
-        document.getElementById("modal-duration").innerText = data.duration;
+        const startDate = new Date(data.start.replace(' ', 'T'));
+        const dateStr = startDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
+        document.getElementById("modal-patient").innerText  = data.patient;
+        document.getElementById("modal-date").innerText     = dateStr;
+        document.getElementById("modal-start").innerText    = data.start.slice(11);
+        document.getElementById("modal-end").innerText      = data.end.slice(11);
+        document.getElementById("modal-duration").innerText = `${data.duration} minutes`;
         document.getElementById("event-modal").style.display = "flex";
       }
 
       function closeEvent() {
         document.getElementById("event-modal").style.display = "none";
       }
+
+      // ── Multi-event day modal ──
+      async function openDayModal(key, ids) {
+        const monthNames = ['January','February','March','April','May','June',
+                            'July','August','September','October','November','December'];
+        const [y, m, d] = key.split('-');
+        document.getElementById('day-modal-title').innerText =
+          `${parseInt(d)} ${monthNames[parseInt(m)-1]} ${y}`;
+
+        const list = document.getElementById('day-modal-list');
+        list.innerHTML = '';
+
+        for (const id of ids) {
+          const res  = await fetch(`/api/event/${id}`);
+          const data = await res.json();
+          if (data.error) continue;
+          const li = document.createElement('li');
+          li.className = 'day-modal-item';
+          li.innerHTML = `<strong>${data.patient}</strong>&nbsp; ${data.start.slice(11)} – ${data.end.slice(11)} &nbsp;<span class="day-modal-duration">${data.duration} min</span>`;
+          list.appendChild(li);
+        }
+
+        document.getElementById('day-modal').style.display = 'flex';
+      }
+
+      function closeDayModal() {
+        document.getElementById('day-modal').style.display = 'none';
+      }
+
+      // ── Init ──
+      renderWeek();
     </script>
   </body>
 </html>
