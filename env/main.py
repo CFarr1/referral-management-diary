@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -12,6 +12,11 @@ app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="template")
+
+
+@app.get("/")
+def root():
+    return RedirectResponse(url="/calendar")
 
 
 @app.get("/calendar", response_class=HTMLResponse)
@@ -49,3 +54,23 @@ def api_event_details(event_id: int):
         "end": end_time.strftime("%Y-%m-%d %H:%M"),
         "duration": int(event.duration.total_seconds() // 60),
     }
+
+
+PLACEHOLDER_PAGES = {
+    "self-referrals": "Self referrals",
+    "advice-sheets":  "Advice sheets",
+    "notifications":  "Notifications",
+}
+
+@app.get("/{page}", response_class=HTMLResponse)
+def placeholder_page(page: str, request: Request):
+    if page not in PLACEHOLDER_PAGES:
+        return JSONResponse({"error": "Not found"}, status_code=404)
+    return templates.TemplateResponse(
+        "placeholder.html",
+        {
+            "request": request,
+            "title":  PLACEHOLDER_PAGES[page],
+            "active": page,
+        },
+    )
